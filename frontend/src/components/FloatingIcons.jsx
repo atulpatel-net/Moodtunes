@@ -1,16 +1,16 @@
 import { motion } from 'framer-motion';
-import { FaHeadphones, FaMusic, FaPlay } from 'react-icons/fa';
+import { FaHeadphones, FaMusic, FaPlay, FaMicrophone, FaGuitar, FaDrum, FaVolumeUp, FaCompactDisc } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
 
 const FloatingIcons = () => {
   const [icons, setIcons] = useState([]);
 
   useEffect(() => {
-    const iconComponents = [FaHeadphones, FaMusic, FaPlay];
-    const numberOfIcons = 12; // 4 of each type
+    const iconComponents = [FaHeadphones, FaMusic, FaPlay, FaMicrophone, FaGuitar, FaDrum, FaVolumeUp, FaCompactDisc];
+    const numberOfIcons = 24; // 3 of each type
     const newIcons = Array.from({ length: numberOfIcons }).map((_, i) => ({
       id: i,
-      Icon: iconComponents[i % 3],
+      Icon: iconComponents[i % 8],
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: Math.random() * 24 + 12, // Random size between 12px and 36px
@@ -25,7 +25,7 @@ const FloatingIcons = () => {
       {icons.map((icon) => (
         <motion.div
           key={icon.id}
-          className="absolute text-blue-400/40"
+          className="absolute text-gray-500"
           style={{
             left: `${icon.x}%`,
             top: `${icon.y}%`,

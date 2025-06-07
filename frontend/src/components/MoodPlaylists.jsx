@@ -75,6 +75,12 @@ const moodColors = {
     bg: 'bg-rose-100',
     hover: 'hover:bg-rose-200',
     button: 'bg-rose-500 hover:bg-rose-600'
+  },
+  LowEnergy: {
+    container: 'bg-slate-50',
+    bg: 'bg-slate-100',
+    hover: 'hover:bg-slate-200',
+    button: 'bg-slate-500 hover:bg-slate-600'
   }
 };
 
@@ -191,6 +197,15 @@ const spotifyPlaylists = {
       { id: '4PdfP3cW6pSXVp6CUaaWfz', name: 'CALM/RELAXING_MUSIC' },
       { id: '0j2dHEBEqIVyxKuLqGHUto', name: 'JOYFUL/HAPPY_MUSIC' }
     ]
+  },
+  LowEnergy: {
+    
+    uplift: [
+      { id: '27670o0opGxJkHKAO1voLz', name: 'ENERGETIC/UPBEAT_MUSIC' },
+      { id: '7ljIrD6LQLGSwD9T1NcP3U', name: 'MOTIVATIONAL_MUSIC' },
+      { id: '4stlIpoPS7uKCsmUA7D8KZ', name: 'CHEERFUL_MUSIC'},
+      { id: '0j2dHEBEqIVyxKuLqGHUto', name: 'JOYFUL/HAPPY_MUSIC' }
+    ]
   }
 };
 
@@ -205,13 +220,16 @@ const MoodPlaylists = ({ currentMood, playlistType: externalPlaylistType, onPlay
   const playlists = spotifyPlaylists[baseMood]?.[externalPlaylistType] || spotifyPlaylists.Happy.match;
 
   // Check if match button should be shown
-  const shouldShowMatchButton = !['fearful', 'disgusted'].includes(baseMood.toLowerCase());
+  const shouldShowMatchButton = !['fearful', 'disgusted', 'LowEnergy', 'Low'].includes(baseMood);
 
   // Check if uplift button should be shown
   const shouldShowUpliftButton = !['happy', 'calm', 'excited', 'energetic', 'motivated', 'joy', 'peaceful', 'serene', 'tranquil', 'relaxed'].includes(baseMood.toLowerCase());
   
   // Check if uplift is recommended
-  const isUpliftRecommended = ['sad', 'heartbroken'].includes(baseMood.toLowerCase());
+  const isUpliftRecommended = ['sad', 'heartbroken', 'LowEnergy', 'Low'].includes(baseMood);
+
+  // For Low Energy mood, always use uplift playlists
+  const effectivePlaylistType = ['LowEnergy', 'Low'].includes(baseMood) ? 'uplift' : externalPlaylistType;
 
   const handleSpotifyClick = (e) => {
     e.stopPropagation(); // Prevent event bubbling
@@ -225,7 +243,7 @@ const MoodPlaylists = ({ currentMood, playlistType: externalPlaylistType, onPlay
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-100">Music for Your Mood</h2>
         <div className="flex space-x-2">
-          {shouldShowMatchButton && (
+          {shouldShowMatchButton && !['LowEnergy', 'Low'].includes(baseMood) && (
             <button
               onClick={() => onPlaylistTypeChange('match')}
               className={`flex items-center px-4 py-2 rounded-full transition-all ${
@@ -242,7 +260,7 @@ const MoodPlaylists = ({ currentMood, playlistType: externalPlaylistType, onPlay
             <button
               onClick={() => onPlaylistTypeChange('uplift')}
               className={`flex items-center px-4 py-2 rounded-full transition-all ${
-                externalPlaylistType === 'uplift'
+                effectivePlaylistType === 'uplift'
                   ? 'bg-green-500 text-white'
                   : isUpliftRecommended 
                     ? 'bg-gradient-to-r from-green-500/20 to-green-500/40 text-white hover:from-green-500/30 hover:to-green-500/50'
@@ -257,7 +275,7 @@ const MoodPlaylists = ({ currentMood, playlistType: externalPlaylistType, onPlay
       </div>
 
       <div className="space-y-4">
-        {playlists.map((playlist, index) => (
+        {(['LowEnergy', 'Low'].includes(baseMood) ? spotifyPlaylists.LowEnergy.uplift : playlists).map((playlist, index) => (
           <div
             key={index}
             className={`relative rounded-lg p-4 transition-all duration-300 bg-gray-500 bg-opacity-30`}
@@ -266,7 +284,7 @@ const MoodPlaylists = ({ currentMood, playlistType: externalPlaylistType, onPlay
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-100">
-                {playlist.name || `${externalPlaylistType === 'match' ? 'Matching' : 'Uplifting'} Playlist ${index + 1}`}
+                {playlist.name || `${effectivePlaylistType === 'match' ? 'Matching' : 'Uplifting'} Playlist ${index + 1}`}
               </h3>
               <a
                 href={`https://open.spotify.com/playlist/${playlist.id}`}

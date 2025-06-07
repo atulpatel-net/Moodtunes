@@ -66,6 +66,14 @@ EMOTION_CATEGORIES = {
         'old times', 'good old days', 'childhood memories', 'past times',
         'throwback', 'blast from the past', 'memory lane', 'flashback',
         'vintage', 'classic', 'traditional', 'old school', 'retro'
+    ],
+    'Low Energy 😴': [
+        'tired', 'exhausted', 'fatigued', 'drained', 'weary', 'sleepy',
+        'lethargic', 'sluggish', 'low energy', 'no energy', 'lack of energy',
+        'burned out', 'worn out', 'spent', 'depleted', 'drowsy', 'groggy',
+        'listless', 'apathetic', 'unmotivated', 'uninspired', 'unenergetic',
+        'low battery', 'running on empty', 'out of steam', 'out of gas',
+        'need rest', 'need sleep', 'need break', 'need recharge'
     ]
 }
 
@@ -853,6 +861,65 @@ def detect_calm(text):
     
     return calm_score
 
+def detect_low_energy(text):
+    """Directly detect low energy and fatigue-related states"""
+    # Convert to lowercase for matching
+    text_lower = text.lower()
+    
+    # Define low energy patterns with weighted scores
+    low_energy_patterns = [
+        # Direct low energy words (weight: 0.4)
+        (r'\b(tired|exhausted|fatigued|drained|weary|sleepy)\b', 0.4),
+        (r'\b(lethargic|sluggish|low energy|no energy|lack of energy)\b', 0.4),
+        
+        # Feeling low expressions (weight: 0.4)
+        (r'\b(feeling low|feeling down|feeling drained|feeling exhausted)\b', 0.4),
+        (r'\b(feel low|feel down|feel drained|feel exhausted)\b', 0.4),
+        (r'\b(am low|am down|am drained|am exhausted)\b', 0.4),
+        (r'\b(is low|is down|is drained|is exhausted)\b', 0.4),
+        
+        # Burnout related (weight: 0.3)
+        (r'\b(burned out|worn out|spent|depleted|drowsy|groggy)\b', 0.3),
+        (r'\b(listless|apathetic|unmotivated|uninspired|unenergetic)\b', 0.3),
+        
+        # Energy depletion (weight: 0.3)
+        (r'\b(low battery|running on empty|out of steam|out of gas)\b', 0.3),
+        (r'\b(need rest|need sleep|need break|need recharge)\b', 0.3),
+        
+        # Physical exhaustion (weight: 0.2)
+        (r'\b(heavy|weighed down|slow|slowing down|can\'t move)\b', 0.2),
+        (r'\b(weak|weakness|powerless|helpless|overwhelmed)\b', 0.2),
+        
+        # Mental exhaustion (weight: 0.2)
+        (r'\b(mentally tired|brain fog|can\'t think|mind blank)\b', 0.2),
+        (r'\b(overworked|stressed out|pushed too hard|too much)\b', 0.2),
+        
+        # Additional low energy expressions (weight: 0.3)
+        (r'\b(not feeling well|not feeling good|not feeling great)\b', 0.3),
+        (r'\b(not up to it|not up for it|not in the mood)\b', 0.3),
+        (r'\b(no motivation|no drive|no energy|no strength)\b', 0.3),
+        (r'\b(too tired|too exhausted|too drained|too weary)\b', 0.3)
+    ]
+    
+    import re
+    
+    # Check each pattern and calculate low energy score with weighted matches
+    low_energy_score = 0
+    for pattern, weight in low_energy_patterns:
+        matches = re.findall(pattern, text_lower)
+        if matches:
+            low_energy_score += len(matches) * weight
+    
+    # Boost the score if multiple low energy indicators are present
+    if low_energy_score > 0:
+        low_energy_score *= 1.5
+    
+    # Additional boost for "feeling low" and similar phrases
+    if re.search(r'\b(feeling|feel|am|is)\s+low\b', text_lower):
+        low_energy_score += 0.3
+    
+    return low_energy_score
+
 @app.route('/api/analyze-mood', methods=['POST'])
 def analyze_mood():
     try:
@@ -880,12 +947,31 @@ def analyze_mood():
             calm_score = detect_calm(text)
             logger.info(f"Calm score: {calm_score}")
             
+            # Check for low energy using pattern matching
+            low_energy_score = detect_low_energy(text)
+            logger.info(f"Low energy score: {low_energy_score}")
+            
             # Get emotion analysis from the model
             results = emotion_analyzer(text)[0]
             logger.info(f"Model emotion results: {results}")
             
             # Group emotions into categories
             grouped_emotions = group_emotions(results)
+            
+            # If low energy score is high enough, override the primary emotion
+            if low_energy_score > 0.2:
+                grouped_emotions['primary_category'] = 'Low Energy 😴'
+                # Add low energy to the categories if not present
+                if not any(cat['name'] == 'Low Energy 😴' for cat in grouped_emotions['categories']):
+                    grouped_emotions['categories'].append({
+                        'name': 'Low Energy 😴',
+                        'score': round(low_energy_score * 100, 2),
+                        'emotions': [{
+                            'emotion': 'low energy',
+                            'emoji': '😴',
+                            'score': round(low_energy_score * 100, 2)
+                        }]
+                    })
             
             # If calm score is high enough, override the primary emotion
             if calm_score > 0.2:  # Threshold for calm detection
@@ -961,6 +1047,10 @@ def analyze_mood():
                 ],
                 'emotion_groups': grouped_emotions
             }
+            
+            # If low energy was detected, add it to the emotions list
+            if low_energy_score > 0.2:
+                response['emotions'].append(f"low energy 😴")
             
             # If calm was detected, add it to the emotions list
             if calm_score > 0.2:

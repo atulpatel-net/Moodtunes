@@ -14,6 +14,7 @@ import PageTransition from './components/PageTransition.jsx';
 import KeyboardShortcuts from './components/KeyboardShortcuts.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
+import Learn from './pages/Learn';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -39,6 +40,11 @@ function AnimatedRoutes() {
         <Route path="/about" element={
           <PageTransition>
             <About />
+          </PageTransition>
+        } />
+        <Route path="/learn" element={
+          <PageTransition>
+            <Learn />
           </PageTransition>
         } />
         <Route path="/dashboard/*" element={

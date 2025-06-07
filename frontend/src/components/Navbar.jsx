@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaMusic, FaKeyboard, FaUserCircle, FaBars, FaTimes } from 'react-icons/fa';
+import { FaMusic, FaKeyboard, FaUserCircle, FaBars, FaTimes, FaHome, FaSignInAlt, FaUserPlus, FaInfoCircle, FaBook } from 'react-icons/fa';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import { logout } from '../services/auth';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +23,7 @@ function Navbar() {
     { to: '/', label: 'Home' },
     { to: '/dashboard', label: 'Dashboard', protected: true },
     { to: '/about', label: 'About' },
+    { to: '/learn', label: 'Learn to Use' },
   ];
 
   const handleLogout = () => {
